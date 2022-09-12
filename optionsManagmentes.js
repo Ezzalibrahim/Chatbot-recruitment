@@ -1,11 +1,16 @@
+const chatBotIsTypingDelay = 1200;
 const chatmessage = document.querySelector('.chatbot__messages');
 chatmessage.innerHTML += addChatbotOptionForm();
 
+// all option that we have in our app (condidate, recruture, client, partenaire)
 const chatbox__options = document.querySelector('.chatbox__options');
 
 //type of Condidate
 let condidate__spontane = null;
 let condidate__choix_offer = null;
+
+// Chatbot Is typing
+let chatBotIsTyping = null;
 
 // all the type of users in our applications
 const condidate = document.querySelector('#condidate');
@@ -18,7 +23,7 @@ const recruture = document.getElementById('recruture');
 const sendButton = document.querySelector('.send__button');
 const messageText = document.querySelector('.messageSended');
 
-messageText.addEventListener("keyup", ({key}) => {
+messageText.addEventListener("keyup", ({ key }) => {
     if (key === "Enter") {
         showNextMessage();
     }
@@ -29,19 +34,20 @@ sendButton.addEventListener('click', () => {
 })
 
 
-function showNextMessage(){
+function showNextMessage() {
     const currentInfoProfile = chatbox.getMessageInfo();
     const indexOfCurrentFilde = chatbox.profile.getIndexOfCurrentProps(currentInfoProfile);
     const nextFilde = chatbox.profile.allFildes[indexOfCurrentFilde + 1];
     if (indexOfCurrentFilde == chatbox.profile.allFildes.length - 1) {
-        showMessage(currentInfoProfile,"thank You  We will Contact  You Soon 😊",nextFilde)
-    }else
-        showMessage(currentInfoProfile ,"Please Enter Your "+nextFilde  , nextFilde);
-    
+        showMessage(currentInfoProfile, "thank You  We will Contact  You Soon 😊", nextFilde)
+    } else {
+        showMessage(currentInfoProfile, "Please Enter Your " + nextFilde, nextFilde);
+    }
+
 }
 
 
-function addChatbotOptionForm(){
+function addChatbotOptionForm() {
     return `
         <div class="chatbox__options">
             <ul>
@@ -55,7 +61,7 @@ function addChatbotOptionForm(){
 }
 
 
-function addUploadCvForm(){
+function addUploadCvForm() {
     return `
         <div class="condidate__upload__cv">
             <label for="upload_cv" class="condidate__cv">
@@ -67,11 +73,18 @@ function addUploadCvForm(){
 }
 
 
-function addCondidateTypeForm(){
+function addchatBotIsTyping() {
     return `
-        <div class="messages__item messages__item--operator">
-            Please choose your type of Condidatur
+        <div class="messages__item messages__item--operator typing">
+                <div class="typing__dot"></div>
+                <div class="typing__dot"></div>
+                <div class="typing__dot"></div>
         </div>
+    `
+}
+
+function addCondidateTypeForm() {
+    return `
         <div class="condidate__type">
             <ul class="chatbox__options">    
                 <li><a id="choix_offer" href="#">Choix d'offer</a></li>
@@ -82,7 +95,7 @@ function addCondidateTypeForm(){
 }
 
 
-function addOffersList(){
+function addOffersList() {
     return `
         <div class="condidate__offer__type">
             <ul class="chatbox__options ">
@@ -95,47 +108,64 @@ function addOffersList(){
 }
 
 
-function showMessage(propUpdate ,messageToShow ,nextpropsToUpdate){
-    chatbox.profile[propUpdate] = messageText.value;
-    chatbox.addmessage(messageText.value , "Sam")
-    messageText.value = "";
+function togglechatBotIsTyping() {
+    chatmessage.innerHTML += addchatBotIsTyping();
+    chatBotIsTyping = document.querySelector('.typing');
     setTimeout(() => {
-        chatbox.addmessage(messageToShow , "User" ,nextpropsToUpdate );
-    }, 300);
+        chatBotIsTyping.remove();
+    }, chatBotIsTypingDelay);
 }
 
-recruture.addEventListener('click',()=>{
+function showMessage(propUpdate, messageToShow, nextpropsToUpdate) {
+    chatbox.profile[propUpdate] = messageText.value;
+    chatbox.addmessage(messageText.value, "Sam")
+    messageText.value = "";
+    showChatbotTypingAndMessage(messageToShow , nextpropsToUpdate);
+}
+
+function showChatbotTypingAndMessage(messageToShow , nextpropsToUpdate){
+    togglechatBotIsTyping();
+    setTimeout(() => {
+        chatbox.addmessage(messageToShow, "User", nextpropsToUpdate);
+    }, chatBotIsTypingDelay);
+    chatmessage.scrollTop = chatmessage.scrollHeight;
+}
+
+recruture.addEventListener('click', () => {
     chatbox.profile = new Recruture();
-    chatbox.addmessage('Please Enter Your first Name' , "User" ,"firstName");
-    chatbox__options.scrollTo(0)
+    showChatbotTypingAndMessage('Please Enter Your first Name',"firstName");
 })
 
-condidate.addEventListener('click',() => {
+condidate.addEventListener('click', () => {
     chatbox.profile = new Condidate();
     chatmessage.innerHTML += addCondidateTypeForm();
     condidate__spontane = document.getElementById('spontane');
     condidate__choix_offer = document.getElementById('choix_offer');
-    condidate__spontane.addEventListener('click' , () => {
-        chatbox.addmessage('Please Upload Your Cv' , "User" ,"Cv");
-        chatmessage.innerHTML += addUploadCvForm();
+    condidate__spontane.addEventListener('click', () => {
+        showChatbotTypingAndMessage('Please Upload Your Cv',"Cv");
+        setTimeout(() => {
+            chatmessage.innerHTML += addUploadCvForm();
+        }, chatBotIsTypingDelay + 100);
     })
-    
-    condidate__choix_offer.addEventListener('click',  () => {
-        chatbox.addmessage('Please Select Offer Type' , "User" ,"Cv");
-        chatmessage.innerHTML += addOffersList();
+
+    condidate__choix_offer.addEventListener('click', () => {
+        showChatbotTypingAndMessage('Please Upload Your Cv',"Cv");
+        setTimeout(() => {
+            chatmessage.innerHTML += addOffersList();
+        }, chatBotIsTypingDelay + 100);
     })
 })
 
 
 
 
-client.addEventListener('click',()=>{
+client.addEventListener('click', () => {
     chatbox.profile = new Client();
-    chatbox.addmessage('Please Enter Your first Name' , "User" ,"firstName");
+    showChatbotTypingAndMessage('Please Enter Your first Name',"firstName");
 })
 
 
-partenaire.addEventListener('click',()=>{
+partenaire.addEventListener('click', () => {
     chatbox.profile = new Partenaire();
-    chatbox.addmessage('Please Enter Your first Name' , "User" ,"firstName");
+    showChatbotTypingAndMessage('Please Enter Your first Name',"firstName");
 })
