@@ -1,4 +1,5 @@
 const chatBotIsTypingDelay = 1200;
+const URL = "";
 const chatmessage = document.querySelector('.chatbot__messages');
 chatmessage.innerHTML += addChatbotOptionForm();
 
@@ -8,6 +9,9 @@ const chatbox__options = document.querySelector('.chatbox__options');
 //type of Condidate
 let condidate__spontane = null;
 let condidate__choix_offer = null;
+
+//Cv File 
+let cvFile = null
 
 // Chatbot Is typing
 let chatBotIsTyping = null;
@@ -33,17 +37,67 @@ sendButton.addEventListener('click', () => {
     showNextMessage();
 })
 
+function getDataFromProfile(){
+    if (chatbox.profile != null ) {
+        if (chatbox.profile.constructor.name == "Condidate") {
+            return {
+                Cv : cvFile.files[0]
+            }
+        } else {
+            let data = {
+                firstName : chatbox.profile.firstName , 
+                LastName : chatbox.profile.LastName , 
+                email : chatbox.profile.email , 
+                tele : chatbox.profile.tele
+            };
+            switch(chatbox.profile.constructor.name){
+                case "Client" : 
+                    data.service = chatbox.profile.service;
+                    break;
+                case "Recruture" :
+                    data.enteprise = chatbox.profile.enteprise;
+                    data.profile = chatbox.profile.profile;
+                    data.ExperienceYears = chatbox.profile.ExperienceYears;
+                    break;
+                case "Partenaire" :
+                    data.partenaireType = chatbox.profile.partenaireType;
+                    break;
+            }
+            return data
+        }
+    }
+}
+
 
 function showNextMessage() {
     const currentInfoProfile = chatbox.getMessageInfo();
     const indexOfCurrentFilde = chatbox.profile.getIndexOfCurrentProps(currentInfoProfile);
     const nextFilde = chatbox.profile.allFildes[indexOfCurrentFilde + 1];
     if (indexOfCurrentFilde == chatbox.profile.allFildes.length - 1) {
+        sendInfo(getDataFromProfile());
         showMessage(currentInfoProfile, "thank You  We will Contact  You Soon 😊", nextFilde)
     } else {
         showMessage(currentInfoProfile, "Please Enter Your " + nextFilde, nextFilde);
     }
 
+}
+
+
+//send Info entred by the user to API  
+function sendInfo(data){
+    fetch(URL, {
+      method: 'POST',
+      headers: {
+        "Content-Type": "multipart/form-data"
+      },
+      body: data 
+    }).then(
+      response => response.json() 
+    ).then(
+      success => console.log(success) 
+    ).catch(
+      error => console.log(error) 
+    );
 }
 
 
@@ -117,10 +171,13 @@ function togglechatBotIsTyping() {
 }
 
 function showMessage(propUpdate, messageToShow, nextpropsToUpdate) {
-    chatbox.profile[propUpdate] = messageText.value;
-    chatbox.addmessage(messageText.value, "Sam")
-    messageText.value = "";
-    showChatbotTypingAndMessage(messageToShow , nextpropsToUpdate);
+    let message = messageText.value.trim();
+    if ( message != "") {
+        chatbox.profile[propUpdate] = message;
+        chatbox.addmessage(message, "Sam")
+        messageText.value = "";
+        showChatbotTypingAndMessage(messageToShow , nextpropsToUpdate);
+    }
 }
 
 function showChatbotTypingAndMessage(messageToShow , nextpropsToUpdate){
@@ -138,22 +195,29 @@ recruture.addEventListener('click', () => {
 
 condidate.addEventListener('click', () => {
     chatbox.profile = new Condidate();
-    chatmessage.innerHTML += addCondidateTypeForm();
-    condidate__spontane = document.getElementById('spontane');
-    condidate__choix_offer = document.getElementById('choix_offer');
-    condidate__spontane.addEventListener('click', () => {
+    showChatbotTypingAndMessage('Please choose your type of Condidatur','Cv');
+    setTimeout(() => {
+        chatmessage.innerHTML += addCondidateTypeForm();
+        condidate__spontane = document.getElementById('spontane');
+        condidate__choix_offer = document.getElementById('choix_offer');
+        condidate__spontane.addEventListener('click', () => {
         showChatbotTypingAndMessage('Please Upload Your Cv',"Cv");
         setTimeout(() => {
             chatmessage.innerHTML += addUploadCvForm();
-        }, chatBotIsTypingDelay + 100);
-    })
+            cvFile = document.getElementById('upload_cv');
+            chatmessage.scrollTop = chatmessage.scrollHeight;
+            }, chatBotIsTypingDelay + 500);
+        })
 
-    condidate__choix_offer.addEventListener('click', () => {
-        showChatbotTypingAndMessage('Please Upload Your Cv',"Cv");
-        setTimeout(() => {
-            chatmessage.innerHTML += addOffersList();
-        }, chatBotIsTypingDelay + 100);
-    })
+        condidate__choix_offer.addEventListener('click', () => {
+            showChatbotTypingAndMessage('Please Choisir Votre Domaine ',"Cv");
+            setTimeout(() => {
+                chatmessage.innerHTML += addOffersList();
+                chatmessage.scrollTop = chatmessage.scrollHeight;
+            }, chatBotIsTypingDelay + 500);
+        })
+        chatmessage.scrollTop = chatmessage.scrollHeight;
+    }, chatBotIsTypingDelay + 300);
 })
 
 
