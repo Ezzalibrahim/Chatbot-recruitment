@@ -1,5 +1,11 @@
+const URLcondidat = "http://localhost:8000/apiCandidat/candidats";
+const URLclient = "http://localhost:8000/apiCandidat/clients";
+const URLpartenaire = "http://localhost:8000/apiCandidat/partenaires";
+const URLrecruteur = "http://localhost:8000/apiCandidat/recruteurs";
+const URLmeeting = "http://localhost:8000/apiCandidat/meetings";
+const URLoffre = "http://localhost:8000/apiCandidat/offres";
 const chatBotIsTypingDelay = 1200;
-const URL = "";
+let URL = "";
 const chatmessage = document.querySelector('.chatbot__messages');
 chatmessage.innerHTML += addChatbotOptionForm();
 
@@ -9,6 +15,19 @@ const chatbox__options = document.querySelector('.chatbox__options');
 //type of Condidate
 let condidate__spontane = null;
 let condidate__choix_offer = null;
+
+//list of offers 
+let offers = []
+
+// services of the society
+let consulting = null ;
+let portage = null ;
+let offshoring = null ;
+let formation = null ;
+let startupping = null ;
+
+// all Services array
+let allServices = [];
 
 //Cv File 
 let cvFile = null
@@ -40,6 +59,7 @@ sendButton.addEventListener('click', () => {
 function getDataFromProfile(){
     if (chatbox.profile != null ) {
         if (chatbox.profile.constructor.name == "Condidate") {
+            URL = URLcondidat;
             return {
                 Cv : cvFile.files[0]
             }
@@ -52,14 +72,17 @@ function getDataFromProfile(){
             };
             switch(chatbox.profile.constructor.name){
                 case "Client" : 
+                    URL = URLclient;
                     data.service = chatbox.profile.service;
                     break;
                 case "Recruture" :
+                    URL = URLrecruteur;
                     data.enteprise = chatbox.profile.enteprise;
                     data.profile = chatbox.profile.profile;
                     data.ExperienceYears = chatbox.profile.ExperienceYears;
                     break;
                 case "Partenaire" :
+                    URL = URLpartenaire;
                     data.partenaireType = chatbox.profile.partenaireType;
                     break;
             }
@@ -74,12 +97,11 @@ function showNextMessage() {
     const indexOfCurrentFilde = chatbox.profile.getIndexOfCurrentProps(currentInfoProfile);
     const nextFilde = chatbox.profile.allFildes[indexOfCurrentFilde + 1];
     if (indexOfCurrentFilde == chatbox.profile.allFildes.length - 1) {
-        sendInfo(getDataFromProfile());
         showMessage(currentInfoProfile, "thank You  We will Contact  You Soon 😊", nextFilde)
+        sendInfo(getDataFromProfile());
     } else {
         showMessage(currentInfoProfile, "Please Enter Your " + nextFilde, nextFilde);
     }
-
 }
 
 
@@ -114,6 +136,19 @@ function addChatbotOptionForm() {
     `
 }
 
+function getServiseSociete(){
+    return `
+        <div class="chatbox__options">
+            <ul>
+                <li><a id="consulting" href="#">Consulting IT</a></li>
+                <li><a id="portage" href="#">Portage salariale</a></li>
+                <li><a id="offshoring" href="#">Offshoring</a></li>
+                <li><a id="formation" href="#">Formation</a></li>
+                <li><a id="startupping" href="#">Startupping</a></li>
+            </ul>
+        </div>        
+    `    
+}
 
 function addUploadCvForm() {
     return `
@@ -150,17 +185,34 @@ function addCondidateTypeForm() {
 
 
 function addOffersList() {
-    return `
-        <div class="condidate__offer__type">
+    let offersListContainer = `
+        <div class="condidate__offer__type"> 
             <ul class="chatbox__options ">
-                <li><a id="front__end" href="#">Front-End</a></li>
-                <li><a id="back_end" href="#">Back-End</a></li>
-                <li><a id="dev__ops" href="#">DevOps</a></li>
+    `;
+
+    offers.forEach(offer => {
+        offersListContainer += `
+            <li>
+                <a id="${offer.name}" href="#">
+                    ${offer.name}
+                </a>
+            </li>    
+            `
+    });
+    
+
+    offersListContainer += `
             </ul>
         </div>
     `
+    return offersListContainer;
 }
 
+function getOffers(){
+    fetch(URLoffre).then(response => {
+        offers = response;
+    });;
+}
 
 function togglechatBotIsTyping() {
     chatmessage.innerHTML += addchatBotIsTyping();
@@ -194,6 +246,7 @@ recruture.addEventListener('click', () => {
 })
 
 condidate.addEventListener('click', () => {
+    getOffers();
     chatbox.profile = new Condidate();
     showChatbotTypingAndMessage('Please choose your type of Condidatur','Cv');
     setTimeout(() => {
@@ -225,9 +278,29 @@ condidate.addEventListener('click', () => {
 
 client.addEventListener('click', () => {
     chatbox.profile = new Client();
-    showChatbotTypingAndMessage('Please Enter Your first Name',"firstName");
+    showChatbotTypingAndMessage('Please Shoose One of Our Servise',"service");
+    setTimeout(() => {
+        chatmessage.innerHTML += getServiseSociete();
+        consulting = document.getElementById('consulting');
+        portage = document.getElementById('portage');
+        offshoring = document.getElementById('offshoring');
+        formation = document.getElementById('formation');
+        startupping = document.getElementById('startupping');
+        allServices = [ consulting , portage , offshoring , formation , startupping ];
+        allServices.forEach(service => {
+            console.log(service);
+            service.addEventListener('click' , (event)=>{
+                addServiceToClientProfile(event);
+            }) 
+        });
+        chatmessage.scrollTop = chatmessage.scrollHeight;
+    }, chatBotIsTypingDelay + 200);
 })
 
+function addServiceToClientProfile(value){
+    showChatbotTypingAndMessage('Please Enter Your first Name','firstName');
+    chatbox.profile.service = value.target.text ;
+}
 
 partenaire.addEventListener('click', () => {
     chatbox.profile = new Partenaire();

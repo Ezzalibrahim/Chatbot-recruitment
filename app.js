@@ -30,16 +30,16 @@ class Recruture {
 
 class Client {
     constructor(){
+        this.service = "" ;
         this.firstName = "" ;
         this.lastName = "" ;
-        this.service = "" ;
         this.email = "" ;
         this.tele = "" ;
 
         this.allFildes = [
+            "service",
             "firstName",
             "LastName",
-            "service",
             "email",
             "tele"
         ]
