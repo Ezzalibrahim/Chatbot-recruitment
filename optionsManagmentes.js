@@ -1,9 +1,9 @@
-const URLcondidat = "http://localhost:8000/apiCandidat/candidats";
-const URLclient = "http://localhost:8000/apiCandidat/clients";
-const URLpartenaire = "http://localhost:8000/apiCandidat/partenaires";
-const URLrecruteur = "http://localhost:8000/apiCandidat/recruteurs";
-const URLmeeting = "http://localhost:8000/apiCandidat/meetings";
-const URLoffre = "http://localhost:8000/apiCandidat/offres";
+const URLcondidat = "https://architeoapirec.herokuapp.com/api/candidats";
+const URLclient = "https://architeoapirec.herokuapp.com/api/clients";
+const URLpartenaire = "https://architeoapirec.herokuapp.com/api/partenaires";
+const URLrecruteur = "https://architeoapirec.herokuapp.com/api/recruteurs";
+const URLmeeting = "https://architeoapirec.herokuapp.com/api/meetings";
+const URLoffre = "https://architeoapirec.herokuapp.com/api/offres";
 const chatBotIsTypingDelay = 1200;
 let URL = "";
 const chatmessage = document.querySelector('.chatbot__messages');
@@ -18,6 +18,9 @@ let condidate__choix_offer = null;
 
 //list of offers 
 let offers = []
+
+//list of Available Meets
+let meetsAvailable = [];
 
 // services of the society
 let consulting = null ;
@@ -193,8 +196,8 @@ function addOffersList() {
     offers.forEach(offer => {
         offersListContainer += `
             <li>
-                <a id="${offer.name}" href="#">
-                    ${offer.name}
+                <a id="${offer.titre}" href="#">
+                    ${offer.titre}  | ${offer.category}
                 </a>
             </li>    
             `
@@ -211,7 +214,37 @@ function addOffersList() {
 function getOffers(){
     fetch(URLoffre).then(response => {
         offers = response;
-    });;
+    });
+}
+
+function getAvailableMeets(){
+    fetch(URLmeeting).then(response => {
+        meetsAvailable = response;
+    });
+}
+
+function addMeetsList(){
+    let meetsListContainer = `
+    <div class="condidate__offer__type"> 
+        <ul class="chatbox__options ">
+    `;
+
+    meetsAvailable.forEach(meetAvailable=> {
+    meetsListContainer += `
+        <li>
+            <a id="${meetAvailable.time_start}" href="#">
+                ${meetAvailable.time_start}  to  ${meetAvailable.time_end}
+            </a>
+        </li>    
+        `
+    });
+
+
+    meetsListContainer += `
+        </ul>
+    </div>
+    `
+    return meetsListContainer;
 }
 
 function togglechatBotIsTyping() {
@@ -277,6 +310,7 @@ condidate.addEventListener('click', () => {
 
 
 client.addEventListener('click', () => {
+    getAvailableMeets();
     chatbox.profile = new Client();
     showChatbotTypingAndMessage('Please Shoose One of Our Servise',"service");
     setTimeout(() => {
